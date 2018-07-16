@@ -27,10 +27,24 @@ jar {
 
 // In this section you declare the dependencies for your production and test code
 dependencies {
-    implementation 'org.slf4j:slf4j-simple:1.7.25'
+    // lombok
+    implementation "org.projectlombok:lombok:1.16.18"
 
+    // akka
+    implementation 'com.typesafe.akka:akka-actor_2.12:2.5.13'
+    implementation 'com.typesafe.akka:akka-cluster_2.12:2.5.13'
+
+    // apache
+    implementation 'org.apache.commons:commons-lang3:3.7'
+    implementation 'org.apache.commons:commons-collections4:4.2'
+
+    // slf4j + logback
+    implementation 'org.slf4j:slf4j-api:1.7.25'
+    implementation 'ch.qos.logback:logback-classic:1.2.3'
+
+    // JUnit 5
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.1.0'
-
+    testImplementation 'com.typesafe.akka:akka-testkit_2.12:2.5.3'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.1.0'
 }
 
