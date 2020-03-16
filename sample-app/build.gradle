@@ -1,0 +1,7 @@
+apply plugin: 'application'
+
+dependencies {
+    implementation(project(":overlaynet"))
+}
+
+mainClassName = "io.dicounter.sampleapp.SampleApp"

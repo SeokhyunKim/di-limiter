@@ -15,4 +15,5 @@ include 'api'
 include 'services:webservice'
 */
 
-rootProject.name = 'di-limiter'
+rootProject.name = 'dicounter'
+include 'overlaynet', 'dicounter', 'sample-app'
