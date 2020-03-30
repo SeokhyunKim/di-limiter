@@ -1,5 +1,6 @@
 subprojects {
     apply plugin: 'java'
+    apply plugin: 'jacoco'
 
     repositories {
         jcenter()
@@ -8,29 +9,89 @@ subprojects {
     dependencies {
         // lombok
         implementation 'org.projectlombok:lombok:1.+'
-
+        testImplementation 'org.projectlombok:lombok:1.+'
+        annotationProcessor 'org.projectlombok:lombok:1.+'
+        testAnnotationProcessor 'org.projectlombok:lombok:1.+'
         // apache
         implementation 'org.apache.commons:commons-lang3:3.+'
         implementation 'org.apache.commons:commons-collections4:4.+'
-
-        // json
+        // json & yaml
         implementation 'com.fasterxml.jackson.core:jackson-databind:2.+'
-        
+        implementation 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.+'
+        implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2+'
+        // joda-time
+        implementation 'joda-time:joda-time:2.+'
         // for Nullable annotation and etc
         implementation 'com.google.code.findbugs:jsr305:3.+'
-
         // slf4j + logback
-        implementation 'org.slf4j:slf4j-api:1.7.25'
-        implementation 'ch.qos.logback:logback-classic:1.2.3'
-
+        implementation 'org.apache.logging.log4j:log4j-api:2.+'
+        implementation 'org.apache.logging.log4j:log4j-core:2.+'
+        implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.+'
+        
         // JUnit 5
-        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.1.0'
-        testImplementation 'com.typesafe.akka:akka-testkit_2.12:2.5.3'
-        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.1.0'
+        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.+'
+        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.+'
+        // test libraries
+        testImplementation 'org.mockito:mockito-junit-jupiter:3.+'
+        testImplementation 'com.google.guava:guava-testlib:28.+'
+
+
     }
+
 
     test {
         useJUnitPlatform()
+
+        jacoco {
+            destinationFile = file("$buildDir/jacoco/${name}.exec")
+            classDumpDir = file("$buildDir/jacoco/classpathdumps")
+        }
+
+        check.dependsOn jacocoTestReport
+    }
+
+    // Jacoco is not working correctly. Will address later. For example, OverlayNet coverage is not included at all even it is tested
+    jacoco {
+        toolVersion = "0.8.5"
+        reportsDir = file("$buildDir/jacoco")
+    }
+
+    jacocoTestReport {
+        reports {
+            html.enabled true
+            xml.enabled true
+            csv.enabled false
+            html.destination file("${buildDir}/jacocoHtml")
+        }
+
+//        afterEvaluate {
+//            classDirectories = files(classDirectories.files.collect {
+//                fileTree(dir: it, exclude: [
+//                    "dicounter/overlaynet/exception/**"
+//                ])
+//            })
+//        }
+
+        doLast {
+            classDirectories.each {
+                println "${it}"
+            }
+            logger.lifecycle("JaCoCo Report: ${buildDir}/jacocoHtml/index.html")
+            def report = file("${jacoco.reportsDir}/test/jacocoTestReport.xml")
+            logger.quiet("Coverage ratio for each type:")
+
+            def reportParser = new XmlParser()
+            reportParser.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+            reportParser.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false)
+            def results = reportParser.parse(report)
+
+            results.counter.each {
+                def type = it.'@type'
+                def covered = it.'@covered' as Float
+                def missed = it.'@missed' as Float
+                logger.quiet("{}: {}", type, (covered / (covered + missed)).round(3))
+            }
+        }
     }
 }
 

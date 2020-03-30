@@ -1,15 +1,18 @@
-package io.dicounter.overlaynet.node;
+package dicounter.overlaynet.node;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NonNull;
-import lombok.Value;
 
+@Getter
 @Builder
-@Value
+@EqualsAndHashCode
 @JsonDeserialize(builder = NodeAddress.NodeAddressBuilder.class)
 public class NodeAddress implements Comparable<NodeAddress> {
+
     @NonNull
     private final String ipAddress;
 
@@ -21,6 +24,11 @@ public class NodeAddress implements Comparable<NodeAddress> {
             return comp1;
         }
         return Integer.compare(port, na.getPort());
+    }
+
+    @Override
+    public String toString() {
+        return "[" + ipAddress + ":" + port + "]";
     }
 
     @JsonPOJOBuilder(withPrefix = "")

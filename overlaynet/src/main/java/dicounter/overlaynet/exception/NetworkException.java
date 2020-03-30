@@ -1,4 +1,4 @@
-package io.dicounter.overlaynet.exceptions;
+package dicounter.overlaynet.exception;
 
 public class NetworkException extends RuntimeException {
 
