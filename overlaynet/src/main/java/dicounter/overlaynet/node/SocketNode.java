@@ -2,7 +2,7 @@ package dicounter.overlaynet.node;
 
 import static dicounter.overlaynet.utils.Exceptions.logError;
 
-import dicounter.overlaynet.communication.socket.ExchangeMessage;
+import dicounter.overlaynet.communication.ExchangeMessage;
 import dicounter.overlaynet.communication.Message;
 import dicounter.overlaynet.exception.NetworkException;
 import java.io.IOException;
@@ -20,14 +20,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString(callSuper = true, exclude = {"executorService"})
 @EqualsAndHashCode(callSuper = true, exclude = {"executorService"})
-public class SocketNodeImpl extends BaseNodeImpl {
+public class SocketNode extends Node {
 
     @NonNull
     private final ExecutorService executorService;
 
     private ServerSocket serverSocket;
 
-    public SocketNodeImpl(@NonNull final NodeAddress nodeAddress, @NonNull final ExecutorService executorService) {
+    public SocketNode(@NonNull final NodeAddress nodeAddress, @NonNull final ExecutorService executorService) {
         super(nodeAddress);
         addKnownAddress(nodeAddress);
         this.executorService = executorService;

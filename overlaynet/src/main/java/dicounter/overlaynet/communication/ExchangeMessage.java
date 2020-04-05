@@ -1,6 +1,5 @@
-package dicounter.overlaynet.communication.socket;
+package dicounter.overlaynet.communication;
 
-import dicounter.overlaynet.communication.Message;
 import dicounter.overlaynet.exception.NetworkException;
 import dicounter.overlaynet.node.NodeAddress;
 import dicounter.overlaynet.utils.Exceptions;

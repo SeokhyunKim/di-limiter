@@ -4,7 +4,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.common.testing.NullPointerTester;
-import dicounter.overlaynet.communication.socket.ExchangeMessage;
 import dicounter.overlaynet.exception.NetworkException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +12,7 @@ import java.net.Socket;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 
-// happy cases are covered by SocketNodeImplTest. This is mainly checking code paths throwing exceptions and etc
+// happy cases are covered by SocketNodeTest. This is mainly checking code paths throwing exceptions and etc
 // many cases are missed because mocking final method of library class like DataOutputStream is not allowed.
 public class ExchangeMessageTest {
 

@@ -25,7 +25,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 @Slf4j
-public class HttpNodeImplTest {
+public class HttpNodeTest {
 
     private static ExecutorService executorService;
 
@@ -46,18 +46,18 @@ public class HttpNodeImplTest {
         }
     }
 
-    private final List<HttpNodeImpl> createdNodes = new ArrayList<>();
+    private final List<HttpNode> createdNodes = new ArrayList<>();
 
     @AfterEach
     public void stopNodes() throws InterruptedException {
-        for (HttpNodeImpl node : createdNodes) {
+        for (HttpNode node : createdNodes) {
             node.stopMessageListening();
         }
         Thread.sleep(1000L); // give time for stopping all threads
     }
 
-    private HttpNodeImpl createNode(@NonNull final NodeAddress nodeAddress) {
-        final HttpNodeImpl node = new HttpNodeImpl(nodeAddress, "/test", executorService);
+    private HttpNode createNode(@NonNull final NodeAddress nodeAddress) {
+        final HttpNode node = new HttpNode(nodeAddress, "/test", executorService);
         createdNodes.add(node);
         return node;
     }
@@ -72,8 +72,8 @@ public class HttpNodeImplTest {
                                      .ipAddress("127.0.0.1")
                                      .port(2001)
                                      .build();
-        HttpNodeImpl node1 = createNode(na1);
-        HttpNodeImpl node2 = createNode(na2);
+        HttpNode node1 = createNode(na1);
+        HttpNode node2 = createNode(na2);
         final MessageCallback msgCallback = new MessageCallback();
         node2.setMessageCallback(msgCallback::callback);
         node1.startMessageListening();
@@ -95,7 +95,7 @@ public class HttpNodeImplTest {
                                     .ipAddress("127.0.0.1")
                                     .port(2000)
                                     .build();
-        HttpNodeImpl node = createNode(na);
+        HttpNode node = createNode(na);
         final MessageCallback msgCallback = new MessageCallback();
         node.setMessageCallback(msgCallback::callback);
         node.startMessageListening();
@@ -139,8 +139,8 @@ public class HttpNodeImplTest {
                                      .ipAddress("127.0.0.1")
                                      .port(2001)
                                      .build();
-        HttpNodeImpl node1 = createNode(na1);
-        HttpNodeImpl node2 = createNode(na2);
+        HttpNode node1 = createNode(na1);
+        HttpNode node2 = createNode(na2);
         final MessageCallback msgCallback1 = new MessageCallback();
         final MessageCallback msgCallback2 = new MessageCallback();
         node1.setMessageCallback(msgCallback1::callback);
@@ -169,7 +169,7 @@ public class HttpNodeImplTest {
 
     @Test
     public void sendMessage_throwsException_whenEmptyPayload() {
-        SocketNodeImpl node = new SocketNodeImpl(mock(NodeAddress.class), mock(ExecutorService.class));
+        SocketNode node = new SocketNode(mock(NodeAddress.class), mock(ExecutorService.class));
         Method processReceivedMessage = TestUtils.getMethod(node.getClass().getSuperclass(), "processReceivedMessage", Message.class);
         Assertions.assertThrows(IllegalStateException.class, () -> TestUtils.callMethod(node, processReceivedMessage,
                                                                                         Message.builder()
@@ -180,10 +180,14 @@ public class HttpNodeImplTest {
     @Test
     public void nullTest() {
         NullPointerTester npt = new NullPointerTester();
-        HttpNodeImpl node = new HttpNodeImpl(mock(NodeAddress.class), "/test", mock(ExecutorService.class));
+        HttpNode node = new HttpNode(NodeAddress.builder()
+                                                .ipAddress("127.0.0.1")
+                                                .port(3000)
+                                                .build(),
+                                     "/test", mock(ExecutorService.class));
         npt.setDefault(Message.class, mock(Message.class));
         npt.setDefault(NodeAddress.class, mock(NodeAddress.class));
         npt.testAllPublicInstanceMethods(node);
-        npt.testAllPublicConstructors(HttpNodeImpl.class);
+        npt.testAllPublicConstructors(HttpNode.class);
     }
 }

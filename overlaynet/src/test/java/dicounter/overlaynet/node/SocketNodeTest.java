@@ -25,7 +25,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 @Slf4j
-public class SocketNodeImplTest {
+public class SocketNodeTest {
 
     private static ExecutorService executorService;
 
@@ -46,18 +46,18 @@ public class SocketNodeImplTest {
         }
     }
 
-    private final List<SocketNodeImpl> createdNodes = new ArrayList<>();
+    private final List<SocketNode> createdNodes = new ArrayList<>();
 
     @AfterEach
     public void stopNodes() throws InterruptedException {
-        for (SocketNodeImpl node : createdNodes) {
+        for (SocketNode node : createdNodes) {
             node.stopMessageListening();
         }
         Thread.sleep(1000L); // give time for stopping all threads
     }
 
-    private SocketNodeImpl createNode(@NonNull final NodeAddress nodeAddress) {
-        final SocketNodeImpl node = new SocketNodeImpl(nodeAddress, executorService);
+    private SocketNode createNode(@NonNull final NodeAddress nodeAddress) {
+        final SocketNode node = new SocketNode(nodeAddress, executorService);
         createdNodes.add(node);
         return node;
     }
@@ -72,8 +72,8 @@ public class SocketNodeImplTest {
                                      .ipAddress("127.0.0.1")
                                      .port(11)
                                      .build();
-        SocketNodeImpl node1 = createNode(na1);
-        SocketNodeImpl node2 = createNode(na2);
+        SocketNode node1 = createNode(na1);
+        SocketNode node2 = createNode(na2);
         final MessageCallback msgCallback = new MessageCallback();
         node2.setMessageCallback(msgCallback::callback);
         node1.startMessageListening();
@@ -95,7 +95,7 @@ public class SocketNodeImplTest {
                                      .ipAddress("127.0.0.1")
                                      .port(20)
                                      .build();
-        SocketNodeImpl node = createNode(na);
+        SocketNode node = createNode(na);
         final MessageCallback msgCallback = new MessageCallback();
         node.setMessageCallback(msgCallback::callback);
         node.startMessageListening();
@@ -139,8 +139,8 @@ public class SocketNodeImplTest {
                                      .ipAddress("127.0.0.1")
                                      .port(31)
                                      .build();
-        SocketNodeImpl node1 = createNode(na1);
-        SocketNodeImpl node2 = createNode(na2);
+        SocketNode node1 = createNode(na1);
+        SocketNode node2 = createNode(na2);
         final MessageCallback msgCallback1 = new MessageCallback();
         final MessageCallback msgCallback2 = new MessageCallback();
         node1.setMessageCallback(msgCallback1::callback);
@@ -169,7 +169,7 @@ public class SocketNodeImplTest {
 
     @Test
     public void sendMessage_throwsException_whenEmptyPayload() {
-        SocketNodeImpl node = new SocketNodeImpl(mock(NodeAddress.class), mock(ExecutorService.class));
+        SocketNode node = new SocketNode(mock(NodeAddress.class), mock(ExecutorService.class));
         Method processReceivedMessage = TestUtils.getMethod(node.getClass().getSuperclass(), "processReceivedMessage", Message.class);
         Assertions.assertThrows(IllegalStateException.class, () -> TestUtils.callMethod(node, processReceivedMessage,
                                                                                         Message.builder()
@@ -180,10 +180,10 @@ public class SocketNodeImplTest {
     @Test
     public void nullTest() {
         NullPointerTester npt = new NullPointerTester();
-        SocketNodeImpl node = new SocketNodeImpl(mock(NodeAddress.class), mock(ExecutorService.class));
+        SocketNode node = new SocketNode(mock(NodeAddress.class), mock(ExecutorService.class));
         npt.setDefault(Message.class, mock(Message.class));
         npt.setDefault(NodeAddress.class, mock(NodeAddress.class));
         npt.testAllPublicInstanceMethods(node);
-        npt.testAllPublicConstructors(SocketNodeImpl.class);
+        npt.testAllPublicConstructors(SocketNode.class);
     }
 }

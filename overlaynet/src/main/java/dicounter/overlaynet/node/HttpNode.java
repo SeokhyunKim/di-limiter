@@ -21,7 +21,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class HttpNodeImpl extends BaseNodeImpl {
+public class HttpNode extends Node {
 
     private static final int BACK_LOGGING = 0;
     private static final int HTTP_SERVER_STOP_DELAY_IN_SECONDS = 1;
@@ -33,8 +33,8 @@ public class HttpNodeImpl extends BaseNodeImpl {
     private final HttpServer httpServer;
     private final String apiPath;
 
-    public HttpNodeImpl(@NonNull final NodeAddress nodeAddress, @NonNull final String apiPath,
-                        @NonNull final ExecutorService executorService) {
+    public HttpNode(@NonNull final NodeAddress nodeAddress, @NonNull final String apiPath,
+                    @NonNull final ExecutorService executorService) {
         super(nodeAddress);
         addKnownAddress(nodeAddress);
         this.apiPath = apiPath;
@@ -83,7 +83,7 @@ public class HttpNodeImpl extends BaseNodeImpl {
     @Override
     public void startMessageListening() {
         super.startMessageListening();
-        this.httpServer.createContext(apiPath, new NodeHttpHandler(this));
+        this.httpServer.createContext(apiPath, new HttpNodeExchangeHandler(this));
         this.httpServer.setExecutor(this.executorService);
         this.httpServer.start();
         log.info("HttpServer for message listening started on {} ", getNodeAddress());

@@ -1,10 +1,15 @@
 package dicounter.overlaynet;
 
-import dicounter.overlaynet.communication.socket.ExchangeMessage;
+import static dicounter.overlaynet.utils.Exceptions.logError;
+
+import dicounter.overlaynet.communication.CommunicationType;
+import dicounter.overlaynet.communication.ExchangeMessage;
 import dicounter.overlaynet.communication.Message;
 import dicounter.overlaynet.communication.MessageType;
+import dicounter.overlaynet.exception.BadRequestException;
 import dicounter.overlaynet.node.Node;
-import dicounter.overlaynet.node.SocketNodeImpl;
+import dicounter.overlaynet.node.HttpNode;
+import dicounter.overlaynet.node.SocketNode;
 import dicounter.overlaynet.node.NodeAddress;
 import dicounter.overlaynet.utils.Messages;
 import java.util.HashMap;
@@ -23,15 +28,16 @@ import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Main controlling class of OverlayNet where all the controlling features are provided.
- * Each {@link SocketNodeImpl} has an unique id. Through OverlayNet, easily send a message to any known node.
+ * Each {@link SocketNode} has an unique id. Through OverlayNet, easily send a message to any known node.
  */
 @Slf4j
 public class OverlayNet {
 
     private static final long THREAD_KEEP_ALIVE_TIME = 3000L;
+    private static final String API_PATH = "/dicounter/overlaynet";
 
     private final ExecutorService executorService;
-    private final Map<NodeAddress, SocketNodeImpl> hostedNodeMap = new HashMap<>();
+    private final Map<NodeAddress, Node> hostedNodeMap = new HashMap<>();
 
     public OverlayNet(final int minThreads, final int maxThreads) {
         this.executorService = new ThreadPoolExecutor(minThreads, maxThreads,
@@ -62,6 +68,7 @@ public class OverlayNet {
     }
 
     public SortedSet<NodeAddress> createHostedNodes(@NonNull final String ipAddress,
+                                                    @NonNull final CommunicationType communicationType,
                                                     final Set<Pair<Integer, Consumer<Message>>> portsAndCallbacks) {
         final SortedSet<NodeAddress> createdNodeAddresses = new TreeSet<>();
         for (final Pair<Integer, Consumer<Message>> portAndCallback : portsAndCallbacks) {
@@ -69,7 +76,14 @@ public class OverlayNet {
                                                        .ipAddress(ipAddress)
                                                        .port(portAndCallback.getLeft())
                                                        .build();
-            final SocketNodeImpl node = new SocketNodeImpl(nodeAddress, executorService);
+            final Node node;
+            if (communicationType == CommunicationType.SOCKET) {
+                node = new SocketNode(nodeAddress, executorService);
+            } else if (communicationType == CommunicationType.HTTP) {
+                node = new HttpNode(nodeAddress, API_PATH, executorService);
+            } else {
+                throw logError(new BadRequestException("Unsupported communication type: " + communicationType));
+            }
             node.startMessageListening();
             hostedNodeMap.put(nodeAddress, node);
             createdNodeAddresses.add(nodeAddress);
@@ -81,7 +95,7 @@ public class OverlayNet {
     }
 
     public void destroyAllHostedNodes() {
-        for (final SocketNodeImpl node : hostedNodeMap.values()) {
+        for (final Node node : hostedNodeMap.values()) {
             node.stopMessageListening();
         }
         this.hostedNodeMap.clear();

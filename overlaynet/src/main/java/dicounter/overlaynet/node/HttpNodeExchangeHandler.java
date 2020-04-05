@@ -23,10 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @AllArgsConstructor
-public class NodeHttpHandler implements HttpHandler {
+public class HttpNodeExchangeHandler implements HttpHandler {
 
     @NonNull
-    private final HttpNodeImpl httpNodeImpl;
+    private final HttpNode httpNodeImpl;
 
     @Override
     public void handle(HttpExchange httpExchange) {
