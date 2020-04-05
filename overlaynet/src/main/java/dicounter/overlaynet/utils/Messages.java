@@ -25,4 +25,11 @@ public class Messages {
         }
         throw new RuntimeException("Not supported message type: " + messageType);
     }
+
+    public static Message createExceptionMessage(@NonNull final String message) {
+        return Message.builder()
+                      .type(MessageType.EXCEPTION)
+                      .payload(message)
+                      .build();
+    }
 }

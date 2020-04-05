@@ -1,87 +1,74 @@
 package dicounter.overlaynet.node;
 
 import static dicounter.overlaynet.utils.Exceptions.logError;
-import static dicounter.overlaynet.utils.Messages.createMessage;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import dicounter.overlaynet.communication.socket.ExchangeMessage;
 import dicounter.overlaynet.communication.Message;
-import dicounter.overlaynet.communication.MessageType;
 import dicounter.overlaynet.exception.NetworkException;
-import dicounter.overlaynet.utils.ObjectMappers;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.List;
 import java.util.Optional;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Consumer;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.NonNull;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
-@EqualsAndHashCode
-public class SocketNodeImpl implements Node {
+@ToString(callSuper = true, exclude = {"executorService"})
+@EqualsAndHashCode(callSuper = true, exclude = {"executorService"})
+public class SocketNodeImpl extends BaseNodeImpl {
 
-    @NonNull @Getter
-    private final NodeAddress nodeAddress;
-    @NonNull @Getter
-    private final SortedSet<NodeAddress> knownNodeAddresses = new TreeSet<>();
-
-    @NonNull
-    private Consumer<Message> callback;
     @NonNull
     private final ExecutorService executorService;
 
-    private boolean isRun = false;
+    private ServerSocket serverSocket;
 
     public SocketNodeImpl(@NonNull final NodeAddress nodeAddress, @NonNull final ExecutorService executorService) {
-        this.nodeAddress = nodeAddress;
-        this.knownNodeAddresses.add(this.nodeAddress);
+        super(nodeAddress);
+        addKnownAddress(nodeAddress);
         this.executorService = executorService;
         log.info("Node created with the address {}", nodeAddress);
     }
 
+    @Override
     public void sendMessage(@NonNull final NodeAddress nodeAddress, @NonNull final Message message) {
-        message.setSender(this.nodeAddress);
+        message.setSender(getNodeAddress());
         message.setReceiver(nodeAddress);
+        log.debug("Send a message {}", message);
         if (isMessageGettingResponse(message)) {
             final ExchangeMessage exchangeMessage = ExchangeMessage.create(nodeAddress);
-            exchangeMessage.sendMessage(message).receiveMessage(callback);
+            exchangeMessage.sendMessage(message).receiveMessage();
             final List<Message> receivedMessages = exchangeMessage.getReceivedMessages();
             for (final Message receivedMessage : receivedMessages) {
                 processReceivedMessage(receivedMessage);
             }
             exchangeMessage.close();
-            ExchangeMessage.create(nodeAddress).sendMessage(message).receiveMessage(callback).close();
         } else {
             ExchangeMessage.create(nodeAddress).sendMessage(message).close();
         }
+        log.debug("Sending a message is done. Message: {}", message);
     }
 
-    private boolean isMessageGettingResponse(@NonNull final Message message) {
-        return message.getType() == MessageType.JOIN_NODE;
-    }
-
-    public void setMessageCallback(@NonNull final Consumer<Message> callback) {
-        this.callback = callback;
-    }
-
+    @Override
     public void startMessageListening() {
-        isRun = true;
+        super.startMessageListening();
+        try {
+            this.serverSocket = new ServerSocket(getNodeAddress().getPort());
+        } catch (final IOException e) {
+            throw logError(new NetworkException("Failed to create ServerSocket at " + getNodeAddress(), e));
+        }
         executorService.submit(() -> {
             try {
-                final ServerSocket serverSocket = new ServerSocket(nodeAddress.getPort());
-                log.info("Starting server socket at node {}", nodeAddress);
-                while (isRun) {
+                log.info("Starting server socket at node {}", getNodeAddress());
+                while (isListeningMessage()) {
                     final Socket socket = serverSocket.accept();
                     executorService.submit(() -> {
                         final ExchangeMessage exchangeMessage = ExchangeMessage.create(socket);
-                        exchangeMessage.receiveMessage(callback);
+                        exchangeMessage.receiveMessage();
                         final List<Message> messages = exchangeMessage.getReceivedMessages();
                         for (final Message message : messages) {
                             log.debug("Processing a message: {}", message);
@@ -92,40 +79,29 @@ public class SocketNodeImpl implements Node {
                         exchangeMessage.close();
                     });
                 }
+                log.info("Stop message listening at {}", getNodeAddress());
+            } catch (final SocketException e) {
+                if (isListeningMessage()) {
+                    throw logError(new NetworkException("Caught a SocketException in message listening loop at " + getNodeAddress(), e));
+                } else {
+                    log.info("ServerSocket is closed and caught SocketException at {}. Exiting message listening loop.", getNodeAddress());
+                }
             } catch (final Throwable e) {
-                throw logError(new NetworkException("Caught an exception while creating a server socket at node " + nodeAddress, e));
+                throw logError(new NetworkException("Caught an exception while creating a server socket at node " + getNodeAddress(), e));
             }
         });
-        log.info("Stopping server socket at node {}", nodeAddress);
+        log.info("Stopping server socket at node {}", getNodeAddress());
     }
 
+    @Override
     public void stopMessageListening() {
-        isRun = false;
-    }
-
-    public boolean isListeningMessage() {
-        return isRun;
-    }
-
-    private void processReceivedMessage(@NonNull final Message message) {
-        if (message.getType() == MessageType.JOIN_NODE || message.getType() == MessageType.RESPONSE_JOIN_NODE) {
-            final String payLoad = message.getPayload();
-            if (StringUtils.isEmpty(payLoad)) {
-                throw logError(new IllegalArgumentException("Received JOIN_NODE with empty payload. Message: " + message));
-            } else {
-                final SortedSet<NodeAddress> knownAddressesByAnotherNode =
-                        ObjectMappers.readValue(payLoad, new TypeReference<SortedSet<NodeAddress>>() {});
-                this.knownNodeAddresses.addAll(knownAddressesByAnotherNode);
-                log.debug("Processes {} message {}. Updated known addresses: {}", message.getType(), message, this.knownNodeAddresses);
+        super.stopMessageListening();
+        if (this.serverSocket != null) {
+            try {
+                this.serverSocket.close();
+            } catch (final IOException e) {
+                log.error("Caught an exception while closing serverSocket at {}", getNodeAddress(), e);
             }
         }
-    }
-
-    private Optional<Message> createResponseMessage(@NonNull final Message message) {
-        if (message.getType() == MessageType.JOIN_NODE) {
-            final Message responseMessage = createMessage(MessageType.RESPONSE_JOIN_NODE, this);
-            return Optional.of(responseMessage);
-        }
-        return Optional.empty();
     }
 }

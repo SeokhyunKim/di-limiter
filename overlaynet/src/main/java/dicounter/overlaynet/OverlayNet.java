@@ -37,8 +37,13 @@ public class OverlayNet {
         this.executorService = new ThreadPoolExecutor(minThreads, maxThreads,
                                                       THREAD_KEEP_ALIVE_TIME, TimeUnit.MILLISECONDS,
                                                       new LinkedBlockingQueue<>());
-        log.info("Initialization params: minThreads {}, maxThreads {}, threadKeepAliveTime {} ms",
+        log.info("OverlayNet created with initialization params: minThreads {}, maxThreads {}, threadKeepAliveTime {} ms",
                  minThreads, maxThreads, THREAD_KEEP_ALIVE_TIME);
+    }
+
+    public OverlayNet(@NonNull final ExecutorService executorService) {
+        this.executorService = executorService;
+        log.info("OverlayNet created with a given executorService.");
     }
 
     public void destroyOverlayNet() {

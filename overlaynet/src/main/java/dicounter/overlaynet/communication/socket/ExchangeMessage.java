@@ -13,7 +13,6 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.NonNull;
@@ -57,20 +56,12 @@ public class ExchangeMessage {
         }
     }
 
-    public ExchangeMessage receiveMessage(@Nullable final Consumer<Message> callback) {
-        final Message message = receiveMessage();
-        receivedMessages.add(message);
-        if (callback != null) {
-            log.debug("Calling a callback function with message {}", message);
-            callback.accept(message);
-        }
-        return this;
-    }
-
-    private Message receiveMessage() {
+    public ExchangeMessage receiveMessage() {
         try {
             final String receivedString = dataInputStream.readUTF();
-            return ObjectMappers.readValue(receivedString, Message.class);
+            final Message message = ObjectMappers.readValue(receivedString, Message.class);
+            receivedMessages.add(message);
+            return this;
         } catch (final IOException e) {
             throw Exceptions.logError(new NetworkException("Caught an exception while receiving a message", e));
         }

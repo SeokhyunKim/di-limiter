@@ -18,18 +18,20 @@ public class TestUtils {
     /**
      * Get reflection Method of an object for testing.
      *
-     * @param object     object instance.
+     * @param clz        Class instance of an object
      * @param methodName method name.
      * @param paramTypes list of parameter types
      * @return Found method which is changed to be accessible.
      */
-    public static Method getMethod(@NonNull final Object object, @NonNull final String methodName, Class<?>... paramTypes) {
+    public static Method getMethod(@NonNull final Class<?> clz, @NonNull final String methodName, Class<?>... paramTypes) {
         try {
-            return object.getClass().getDeclaredMethod(methodName, paramTypes);
+            return clz.getDeclaredMethod(methodName, paramTypes);
         } catch (final NoSuchMethodException e) {
             throw logError(new IllegalStateException("Failed to get a method " + methodName, e));
         }
     }
+
+
 
     /**
      * Call method of an object. Always set accessible as true, so this call call private method.

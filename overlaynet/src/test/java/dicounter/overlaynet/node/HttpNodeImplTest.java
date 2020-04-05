@@ -25,7 +25,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 @Slf4j
-public class SocketNodeImplTest {
+public class HttpNodeImplTest {
 
     private static ExecutorService executorService;
 
@@ -46,18 +46,18 @@ public class SocketNodeImplTest {
         }
     }
 
-    private final List<SocketNodeImpl> createdNodes = new ArrayList<>();
+    private final List<HttpNodeImpl> createdNodes = new ArrayList<>();
 
     @AfterEach
     public void stopNodes() throws InterruptedException {
-        for (SocketNodeImpl node : createdNodes) {
+        for (HttpNodeImpl node : createdNodes) {
             node.stopMessageListening();
         }
         Thread.sleep(1000L); // give time for stopping all threads
     }
 
-    private SocketNodeImpl createNode(@NonNull final NodeAddress nodeAddress) {
-        final SocketNodeImpl node = new SocketNodeImpl(nodeAddress, executorService);
+    private HttpNodeImpl createNode(@NonNull final NodeAddress nodeAddress) {
+        final HttpNodeImpl node = new HttpNodeImpl(nodeAddress, "/test", executorService);
         createdNodes.add(node);
         return node;
     }
@@ -66,14 +66,14 @@ public class SocketNodeImplTest {
     public void sendMessage_canSendMessage() throws InterruptedException {
         NodeAddress na1 = NodeAddress.builder()
                                      .ipAddress("127.0.0.1")
-                                     .port(10)
+                                     .port(2000)
                                      .build();
         NodeAddress na2 = NodeAddress.builder()
                                      .ipAddress("127.0.0.1")
-                                     .port(11)
+                                     .port(2001)
                                      .build();
-        SocketNodeImpl node1 = createNode(na1);
-        SocketNodeImpl node2 = createNode(na2);
+        HttpNodeImpl node1 = createNode(na1);
+        HttpNodeImpl node2 = createNode(na2);
         final MessageCallback msgCallback = new MessageCallback();
         node2.setMessageCallback(msgCallback::callback);
         node1.startMessageListening();
@@ -92,10 +92,10 @@ public class SocketNodeImplTest {
     @Test
     public void stopMessageListeneing_canStopMessageListening() throws InterruptedException {
         NodeAddress na = NodeAddress.builder()
-                                     .ipAddress("127.0.0.1")
-                                     .port(20)
-                                     .build();
-        SocketNodeImpl node = createNode(na);
+                                    .ipAddress("127.0.0.1")
+                                    .port(2000)
+                                    .build();
+        HttpNodeImpl node = createNode(na);
         final MessageCallback msgCallback = new MessageCallback();
         node.setMessageCallback(msgCallback::callback);
         node.startMessageListening();
@@ -133,14 +133,14 @@ public class SocketNodeImplTest {
     public void sendMessage_canExchangeMessages_whenSendJoin() throws InterruptedException {
         NodeAddress na1 = NodeAddress.builder()
                                      .ipAddress("127.0.0.1")
-                                     .port(30)
+                                     .port(2000)
                                      .build();
         NodeAddress na2 = NodeAddress.builder()
                                      .ipAddress("127.0.0.1")
-                                     .port(31)
+                                     .port(2001)
                                      .build();
-        SocketNodeImpl node1 = createNode(na1);
-        SocketNodeImpl node2 = createNode(na2);
+        HttpNodeImpl node1 = createNode(na1);
+        HttpNodeImpl node2 = createNode(na2);
         final MessageCallback msgCallback1 = new MessageCallback();
         final MessageCallback msgCallback2 = new MessageCallback();
         node1.setMessageCallback(msgCallback1::callback);
@@ -180,10 +180,10 @@ public class SocketNodeImplTest {
     @Test
     public void nullTest() {
         NullPointerTester npt = new NullPointerTester();
-        SocketNodeImpl node = new SocketNodeImpl(mock(NodeAddress.class), mock(ExecutorService.class));
+        HttpNodeImpl node = new HttpNodeImpl(mock(NodeAddress.class), "/test", mock(ExecutorService.class));
         npt.setDefault(Message.class, mock(Message.class));
         npt.setDefault(NodeAddress.class, mock(NodeAddress.class));
         npt.testAllPublicInstanceMethods(node);
-        npt.testAllPublicConstructors(SocketNodeImpl.class);
+        npt.testAllPublicConstructors(HttpNodeImpl.class);
     }
 }
