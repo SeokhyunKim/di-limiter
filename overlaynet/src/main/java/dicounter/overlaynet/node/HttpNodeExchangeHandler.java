@@ -40,7 +40,7 @@ public class HttpNodeExchangeHandler implements HttpHandler {
                 httpExchange.sendResponseHeaders(200, 0);
                 log.debug("Http message handling is done. Message: {}", message);
             } else {
-                final String response = ObjectMappers.writeValueAsString(Messages.createExceptionMessage("Only POST call is supported"));
+                final String response = ObjectMappers.writeValueAsString(Messages.createExceptionMessage("Only POST call is being used"));
                 httpExchange.sendResponseHeaders(400, response.getBytes(StandardCharsets.UTF_8).length);
                 final OutputStream os = httpExchange.getResponseBody();
                 os.write(response.getBytes(StandardCharsets.UTF_8));
@@ -56,7 +56,7 @@ public class HttpNodeExchangeHandler implements HttpHandler {
         final InputStream inputStream = httpExchange.getRequestBody();
         final StringBuilder stringBuilder = new StringBuilder();
         try (final Reader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-            int c = 0;
+            int c;
             while ((c = reader.read()) != -1) {
                 stringBuilder.append((char)c);
             }

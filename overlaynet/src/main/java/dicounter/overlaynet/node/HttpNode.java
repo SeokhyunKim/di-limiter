@@ -46,6 +46,7 @@ public class HttpNode extends Node {
         }
     }
 
+    // todo: add timeout handling logic
     @Override
     public void sendMessage(NodeAddress nodeAddress, Message message) {
         message.setSender(getNodeAddress());

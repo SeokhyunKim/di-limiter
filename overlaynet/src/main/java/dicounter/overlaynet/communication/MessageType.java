@@ -4,5 +4,6 @@ public enum MessageType {
     PING,
     JOIN_NODE,
     RESPONSE_JOIN_NODE,
+    PAYLOAD_TRANSMISSION,
     EXCEPTION,
 }

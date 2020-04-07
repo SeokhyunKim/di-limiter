@@ -1,7 +1,7 @@
 package dicounter.overlaynet.node;
 
 import static dicounter.overlaynet.utils.Exceptions.logError;
-import static dicounter.overlaynet.utils.Messages.createMessage;
+import static dicounter.overlaynet.utils.Messages.createOverlayNetControlMessage;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import dicounter.overlaynet.communication.Message;
@@ -72,7 +72,7 @@ public abstract class Node {
 
     Optional<Message> createResponseMessage(@NonNull final Message message) {
         if (message.getType() == MessageType.JOIN_NODE) {
-            final Message responseMessage = createMessage(MessageType.RESPONSE_JOIN_NODE, this);
+            final Message responseMessage = createOverlayNetControlMessage(MessageType.RESPONSE_JOIN_NODE, this);
             return Optional.of(responseMessage);
         }
         return Optional.empty();

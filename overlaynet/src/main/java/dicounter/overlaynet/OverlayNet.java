@@ -13,6 +13,7 @@ import dicounter.overlaynet.node.SocketNode;
 import dicounter.overlaynet.node.NodeAddress;
 import dicounter.overlaynet.utils.Messages;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -22,9 +23,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Main controlling class of OverlayNet where all the controlling features are provided.
@@ -37,61 +38,82 @@ public class OverlayNet {
     private static final String API_PATH = "/dicounter/overlaynet";
 
     private final ExecutorService executorService;
+    private final boolean isExternalExecutorService;
     private final Map<NodeAddress, Node> hostedNodeMap = new HashMap<>();
 
     public OverlayNet(final int minThreads, final int maxThreads) {
         this.executorService = new ThreadPoolExecutor(minThreads, maxThreads,
                                                       THREAD_KEEP_ALIVE_TIME, TimeUnit.MILLISECONDS,
                                                       new LinkedBlockingQueue<>());
+        isExternalExecutorService = false;
         log.info("OverlayNet created with initialization params: minThreads {}, maxThreads {}, threadKeepAliveTime {} ms",
                  minThreads, maxThreads, THREAD_KEEP_ALIVE_TIME);
     }
 
     public OverlayNet(@NonNull final ExecutorService executorService) {
         this.executorService = executorService;
+        isExternalExecutorService = true;
         log.info("OverlayNet created with a given executorService.");
     }
 
     public void destroyOverlayNet() {
         destroyAllHostedNodes();
-        executorService.shutdown();
-        try {
-            final long awaitingTimeForTerminationInMilliseconds = THREAD_KEEP_ALIVE_TIME * 3;
-            if (!executorService.awaitTermination(awaitingTimeForTerminationInMilliseconds, TimeUnit.MILLISECONDS)) {
-                log.warn("There are remaining threads after {} milliseconds.", awaitingTimeForTerminationInMilliseconds);
+        if (!isExternalExecutorService && this.executorService != null) {
+            executorService.shutdown();
+            try {
+                final long awaitingTimeForTerminationInMilliseconds = THREAD_KEEP_ALIVE_TIME * 3;
+                if (!executorService.awaitTermination(awaitingTimeForTerminationInMilliseconds, TimeUnit.MILLISECONDS)) {
+                    log.warn("There are remaining threads after {} milliseconds.", awaitingTimeForTerminationInMilliseconds);
+                    executorService.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                log.error("Failed to shutdown now. Trying shutdown again.");
                 executorService.shutdownNow();
             }
-        } catch (InterruptedException e) {
-            log.error("Failed to shutdown now.");
-            executorService.shutdownNow();
         }
     }
 
-    public SortedSet<NodeAddress> createHostedNodes(@NonNull final String ipAddress,
-                                                    @NonNull final CommunicationType communicationType,
-                                                    final Set<Pair<Integer, Consumer<Message>>> portsAndCallbacks) {
+    public Node createHostedNode(@NonNull final NodeAddress nodeAddress, @NonNull final CommunicationType communicationType) {
+        final Node node;
+        if (communicationType == CommunicationType.SOCKET) {
+            node = new SocketNode(nodeAddress, executorService);
+        } else if (communicationType == CommunicationType.HTTP) {
+            node = new HttpNode(nodeAddress, API_PATH, executorService);
+        } else {
+            throw logError(new BadRequestException("Unsupported communication type: " + communicationType));
+        }
+        node.startMessageListening();
+        hostedNodeMap.put(nodeAddress, node);
+        return node;
+    }
+
+    public Set<Node> createHostedNodes(@NonNull final Set<NodeAddress> nodeAddresses,
+                                       @NonNull final CommunicationType communicationType) {
         final SortedSet<NodeAddress> createdNodeAddresses = new TreeSet<>();
-        for (final Pair<Integer, Consumer<Message>> portAndCallback : portsAndCallbacks) {
-            final NodeAddress nodeAddress = NodeAddress.builder()
-                                                       .ipAddress(ipAddress)
-                                                       .port(portAndCallback.getLeft())
-                                                       .build();
-            final Node node;
-            if (communicationType == CommunicationType.SOCKET) {
-                node = new SocketNode(nodeAddress, executorService);
-            } else if (communicationType == CommunicationType.HTTP) {
-                node = new HttpNode(nodeAddress, API_PATH, executorService);
-            } else {
-                throw logError(new BadRequestException("Unsupported communication type: " + communicationType));
-            }
-            node.startMessageListening();
-            hostedNodeMap.put(nodeAddress, node);
-            createdNodeAddresses.add(nodeAddress);
+        for (final NodeAddress nodeAddress : nodeAddresses) {
+            createdNodeAddresses.add(createHostedNode(nodeAddress, communicationType).getNodeAddress());
         }
         for (final Node node : hostedNodeMap.values()) {
             node.getKnownNodeAddresses().addAll(createdNodeAddresses);
         }
-        return createdNodeAddresses;
+        return new HashSet<>(hostedNodeMap.values());
+    }
+
+    public SortedSet<NodeAddress> createHostedNodes(@NonNull final String ipAddress,
+                                                    @NonNull final CommunicationType communicationType,
+                                                    final Map<Integer, Consumer<Message>> portsAndCallbacks) {
+        final SortedSet<NodeAddress> newNodeAddresses = portsAndCallbacks.keySet()
+                                                                         .stream()
+                                                                         .map(port -> NodeAddress.builder()
+                                                                                                 .ipAddress(ipAddress)
+                                                                                                 .port(port)
+                                                                                                 .build())
+                                                                         .collect(Collectors.toCollection(TreeSet::new));
+        final Set<Node> newNodes = createHostedNodes(newNodeAddresses, communicationType);
+        for (final Node newNode : newNodes) {
+            newNode.setMessageCallback(portsAndCallbacks.get(newNode.getNodeAddress().getPort()));
+        }
+        return newNodeAddresses;
     }
 
     public void destroyAllHostedNodes() {
@@ -106,7 +128,7 @@ public class OverlayNet {
             return;
         }
         for (final Node node : hostedNodeMap.values()) {
-            final Message joinMessage = Messages.createMessage(MessageType.JOIN_NODE, node);
+            final Message joinMessage = Messages.createOverlayNetControlMessage(MessageType.JOIN_NODE, node);
             for (final NodeAddress seedNode : seedNodes) {
                 node.sendMessage(seedNode, joinMessage);
             }

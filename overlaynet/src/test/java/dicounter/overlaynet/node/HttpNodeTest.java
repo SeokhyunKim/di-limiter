@@ -149,7 +149,7 @@ public class HttpNodeTest {
         node2.startMessageListening();
         Thread.sleep(500L); // wait for message listening loop activation
 
-        node1.sendMessage(na2, Messages.createMessage(MessageType.JOIN_NODE, node1));
+        node1.sendMessage(na2, Messages.createOverlayNetControlMessage(MessageType.JOIN_NODE, node1));
         List<Message> received1 = msgCallback1.getReceived();
         List<Message> received2 = msgCallback2.getReceived();
         while (received1.isEmpty() && received2.isEmpty()) {
