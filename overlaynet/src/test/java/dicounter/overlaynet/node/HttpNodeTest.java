@@ -6,7 +6,7 @@ import com.google.common.testing.NullPointerTester;
 import dicounter.overlaynet.MessageCallback;
 import dicounter.overlaynet.communication.Message;
 import dicounter.overlaynet.communication.MessageType;
-import dicounter.overlaynet.utils.Messages;
+import dicounter.overlaynet.communication.Messages;
 import dicounter.overlaynet.utils.TestUtils;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -91,23 +91,32 @@ public class HttpNodeTest {
 
     @Test
     public void stopMessageListeneing_canStopMessageListening() throws InterruptedException {
-        NodeAddress na = NodeAddress.builder()
+        NodeAddress na1 = NodeAddress.builder()
                                     .ipAddress("127.0.0.1")
                                     .port(2000)
                                     .build();
-        HttpNode node = createNode(na);
-        final MessageCallback msgCallback = new MessageCallback();
-        node.setMessageCallback(msgCallback::callback);
-        node.startMessageListening();
+        NodeAddress na2 = NodeAddress.builder()
+                                     .ipAddress("127.0.0.1")
+                                     .port(2001)
+                                     .build();
+        HttpNode node1 = createNode(na1);
+        HttpNode node2 = createNode(na2);
+        final MessageCallback msgCallback1 = new MessageCallback();
+        final MessageCallback msgCallback2 = new MessageCallback();
+        node1.setMessageCallback(msgCallback1::callback);
+        node2.setMessageCallback(msgCallback2::callback);
+        node1.startMessageListening();
+        node2.startMessageListening();
         Thread.sleep(500L); // wait for message listening loop activation
-        node.sendMessage(na, Message.PING);
-        node.sendMessage(na, Message.PING);
-        node.sendMessage(na, Message.PING);
-        Assertions.assertTrue(node.isListeningMessage());
+        node1.sendMessage(na2, Message.PING);
+        node1.sendMessage(na2, Message.PING);
+        node1.sendMessage(na2, Message.PING);
+        Assertions.assertTrue(node1.isListeningMessage());
+        Assertions.assertTrue(node2.isListeningMessage());
         long start = System.currentTimeMillis();
         while (System.currentTimeMillis() - start < 10000L) {
-            log.info("Checking msgCallback {}. size: {}, msgs: {}", msgCallback, msgCallback.getReceived().size(), msgCallback.getReceived());
-            if (msgCallback.getReceived().size() < 3) {
+            log.info("Checking msgCallback {}. size: {}, msgs: {}", msgCallback1, msgCallback1.getReceived().size(), msgCallback1.getReceived());
+            if (msgCallback1.getReceived().size() < 3) {
                 Thread.sleep(100L);
             } else {
                 break;
@@ -116,16 +125,19 @@ public class HttpNodeTest {
         if (System.currentTimeMillis() - start >= 10000L) {
             throw new RuntimeException("time out while waiting for arrivals of ping messages");
         }
-        Assertions.assertEquals(msgCallback.getReceived().size(), 3);
+        Assertions.assertEquals(msgCallback1.getReceived().size(), 3);
+        msgCallback1.getReceived().forEach(msg -> Assertions.assertEquals(msg.getType(), MessageType.PING_RESPONSE));
+        Assertions.assertEquals(msgCallback2.getReceived().size(), 3);
+        msgCallback2.getReceived().forEach(msg -> Assertions.assertEquals(msg.getType(), MessageType.PING));
 
-        node.stopMessageListening();
+        node2.stopMessageListening();
 
         try {
-            node.sendMessage(na, Message.PING);
+            node1.sendMessage(na2, Message.PING);
         } catch (final Exception e) {
             log.error("Error while sending a ping", e);
         }
-        int numReceived = msgCallback.getReceived().size();
+        int numReceived = msgCallback2.getReceived().size();
         Assertions.assertTrue(numReceived == 3);
     }
 

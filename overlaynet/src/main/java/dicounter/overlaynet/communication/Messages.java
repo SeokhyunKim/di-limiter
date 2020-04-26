@@ -1,8 +1,9 @@
-package dicounter.overlaynet.utils;
+package dicounter.overlaynet.communication;
 
 import dicounter.overlaynet.communication.Message;
 import dicounter.overlaynet.communication.MessageType;
 import dicounter.overlaynet.node.Node;
+import dicounter.overlaynet.utils.ObjectMappers;
 import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -18,10 +19,12 @@ public class Messages {
             Validate.isTrue(node != null, "Null node is given for " + messageType);
             return Message.builder()
                           .type(messageType)
-                          .payload(ObjectMappers.writeValueAsString(node.getKnownNodeAddresses()))
+                          .payload(MessagePayloads.createKnownAddressesPayload(node.getKnownNodeAddresses()))
                           .build();
         } else if (messageType == MessageType.PING) {
             return Message.PING;
+        } else if (messageType == MessageType.PING_RESPONSE) {
+            return Message.PING_RESPONSE;
         }
         throw new RuntimeException("Not supported message type: " + messageType);
     }

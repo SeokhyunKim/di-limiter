@@ -7,7 +7,7 @@ import com.sun.net.httpserver.HttpHandler;
 import dicounter.overlaynet.communication.Message;
 import dicounter.overlaynet.exception.BadRequestException;
 import dicounter.overlaynet.exception.NetworkException;
-import dicounter.overlaynet.utils.Messages;
+import dicounter.overlaynet.communication.Messages;
 import dicounter.overlaynet.utils.ObjectMappers;
 import java.io.BufferedReader;
 import java.io.IOException;

@@ -11,7 +11,7 @@ import dicounter.overlaynet.node.Node;
 import dicounter.overlaynet.node.HttpNode;
 import dicounter.overlaynet.node.SocketNode;
 import dicounter.overlaynet.node.NodeAddress;
-import dicounter.overlaynet.utils.Messages;
+import dicounter.overlaynet.communication.Messages;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

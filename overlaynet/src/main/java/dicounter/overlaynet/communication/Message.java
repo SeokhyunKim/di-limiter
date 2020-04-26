@@ -24,6 +24,10 @@ public class Message {
                                         .type(MessageType.PING)
                                         .build();
 
+    public static Message PING_RESPONSE = Message.builder()
+                                                 .type(MessageType.PING_RESPONSE)
+                                                 .build();
+
     @Nullable @Setter
     private NodeAddress sender;
     @Nullable @Setter

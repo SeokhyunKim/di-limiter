@@ -3,27 +3,30 @@ package dicounter.message;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import dicounter.overlaynet.node.NodeAddress;
 import java.util.UUID;
 import lombok.Builder;
 import lombok.Value;
 
 @Value
 @Builder
-@JsonDeserialize(builder = LeaderDetectMessage.LeaderDetectMessageBuilder.class)
-public class LeaderDetectMessage implements DicounterMessage {
+@JsonDeserialize(builder = AggregateTriggersResponse.AggregateTriggersResponseBuilder.class)
+public class AggregateTriggersResponse implements DicounterMessage {
 
     private final UUID countingTaskId;
     private final UUID id;
     private final int roundNo;
-    private final long localThresholdValue;
+    private final NodeAddress aggregatingLeaderAddress;
+    private final NodeAddress reportingNodeAddress;
+    private final long numReceivedTriggers;
 
     @JsonIgnore
     @Override
     public DicounterMessageType getType() {
-        return DicounterMessageType.LEADER_DETECT;
+        return DicounterMessageType.AGGREGATE_TRIGGERS_RESPONSE;
     }
 
     @JsonPOJOBuilder(withPrefix = "")
-    public static final class LeaderDetectMessageBuilder {
+    public static final class AggregateTriggersResponseBuilder {
     }
 }

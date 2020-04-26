@@ -18,19 +18,15 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@ToString(callSuper = true, exclude = {"executorService"})
-@EqualsAndHashCode(callSuper = true, exclude = {"executorService"})
+@ToString(callSuper = true, exclude = {"serverSocket"})
+@EqualsAndHashCode(callSuper = true, exclude = {"serverSocket"})
 public class SocketNode extends Node {
-
-    @NonNull
-    private final ExecutorService executorService;
 
     private ServerSocket serverSocket;
 
     public SocketNode(@NonNull final NodeAddress nodeAddress, @NonNull final ExecutorService executorService) {
-        super(nodeAddress);
+        super(nodeAddress, executorService);
         addKnownAddress(nodeAddress);
-        this.executorService = executorService;
         log.info("Node created with the address {}", nodeAddress);
     }
 

@@ -2,9 +2,11 @@ package dicounter.overlaynet.utils;
 
 import static dicounter.overlaynet.utils.Exceptions.logError;
 
+import dicounter.overlaynet.node.NodeAddress;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.concurrent.ThreadLocalRandom;
 import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -14,6 +16,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TestUtils {
+
+    public static NodeAddress createRandomTestNodeAddress() {
+        return createTestNodeAddress(ThreadLocalRandom.current().nextInt(2000, 3000));
+    }
+
+    public static NodeAddress createTestNodeAddress(int port) {
+        return NodeAddress.builder()
+                          .ipAddress("127.0.0.1")
+                          .port(port)
+                          .build();
+    }
 
     /**
      * Get reflection Method of an object for testing.

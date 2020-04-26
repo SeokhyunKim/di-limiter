@@ -27,18 +27,14 @@ public class HttpNode extends Node {
     private static final int HTTP_SERVER_STOP_DELAY_IN_SECONDS = 1;
     private static Set<Integer> successResponseCodes = Sets.newHashSet(HttpURLConnection.HTTP_OK, HttpURLConnection.HTTP_CREATED);
 
-    @NonNull
-    private final ExecutorService executorService;
-
     private final HttpServer httpServer;
     private final String apiPath;
 
     public HttpNode(@NonNull final NodeAddress nodeAddress, @NonNull final String apiPath,
                     @NonNull final ExecutorService executorService) {
-        super(nodeAddress);
+        super(nodeAddress, executorService);
         addKnownAddress(nodeAddress);
         this.apiPath = apiPath;
-        this.executorService = executorService;
         try {
             this.httpServer = HttpServer.create(new InetSocketAddress(nodeAddress.getIpAddress(), nodeAddress.getPort()), BACK_LOGGING);
         } catch (final IOException e) {

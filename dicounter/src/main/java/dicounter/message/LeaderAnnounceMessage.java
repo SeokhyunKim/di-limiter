@@ -1,30 +1,26 @@
 package dicounter.message;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import java.util.UUID;
+import dicounter.overlaynet.node.NodeAddress;
 import lombok.Builder;
 import lombok.Value;
 
 @Value
 @Builder
-@JsonDeserialize(builder = DetectMessage.DetectMessageBuilder.class)
-public class DetectMessage implements DicounterMessage {
+@JsonDeserialize(builder = LeaderAnnounceMessage.LeaderAnnounceMessageBuilder.class)
+public class LeaderAnnounceMessage implements DicounterMessage {
 
-    private final UUID countingTaskId;
-    private final int roundNo;
-    private final long remainingTriggersToObserve;
+    private final NodeAddress nodeAddress;
 
     @JsonIgnore
     @Override
     public DicounterMessageType getType() {
-        return DicounterMessageType.DETECT;
+        return DicounterMessageType.LEADER_ANNOUNCE;
     }
 
     @JsonPOJOBuilder(withPrefix = "")
-    public static final class DetectMessageBuilder {
+    public static final class LeaderAnnounceMessageBuilder {
     }
-
 }
