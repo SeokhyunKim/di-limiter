@@ -1,9 +1,6 @@
 package dicounter.overlaynet.communication;
 
-import dicounter.overlaynet.communication.Message;
-import dicounter.overlaynet.communication.MessageType;
 import dicounter.overlaynet.node.Node;
-import dicounter.overlaynet.utils.ObjectMappers;
 import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -19,7 +16,7 @@ public class Messages {
             Validate.isTrue(node != null, "Null node is given for " + messageType);
             return Message.builder()
                           .type(messageType)
-                          .payload(MessagePayloads.createKnownAddressesPayload(node.getKnownNodeAddresses()))
+                          .payload(MessagePayloads.createKnownAddressesPayload(node.getNeighbors()))
                           .build();
         } else if (messageType == MessageType.PING) {
             return Message.PING;

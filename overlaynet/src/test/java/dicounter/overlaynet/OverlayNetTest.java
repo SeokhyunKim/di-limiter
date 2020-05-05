@@ -98,10 +98,10 @@ public class OverlayNetTest {
                 (Map<NodeAddress, SocketNode>)TestUtils.getMemberVariable(overlayNet2, "hostedNodeMap");
         Thread.sleep(10000L);
         for (Node node : nodeMap1.values()) {
-            Assertions.assertEquals(node.getKnownNodeAddresses(), allNodes);
+            Assertions.assertEquals(node.getNeighbors(), allNodes);
         }
         for (Node node : nodeMap2.values()) {
-            Assertions.assertEquals(node.getKnownNodeAddresses(), allNodes);
+            Assertions.assertEquals(node.getNeighbors(), allNodes);
         }
 
         overlayNet1.destroyOverlayNet();
@@ -138,10 +138,10 @@ public class OverlayNetTest {
                 (Map<NodeAddress, SocketNode>)TestUtils.getMemberVariable(overlayNet2, "hostedNodeMap");
         Thread.sleep(10000L);
         for (Node node : nodeMap1.values()) {
-            Assertions.assertEquals(node.getKnownNodeAddresses(), allNodes);
+            Assertions.assertEquals(node.getNeighbors(), allNodes);
         }
         for (Node node : nodeMap2.values()) {
-            Assertions.assertEquals(node.getKnownNodeAddresses(), allNodes);
+            Assertions.assertEquals(node.getNeighbors(), allNodes);
         }
 
         overlayNet1.destroyOverlayNet();

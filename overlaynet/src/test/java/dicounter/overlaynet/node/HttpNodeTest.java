@@ -175,8 +175,8 @@ public class HttpNodeTest {
         SortedSet<NodeAddress> addresses = new TreeSet<>();
         addresses.add(na1);
         addresses.add(na2);
-        Assertions.assertEquals(node1.getKnownNodeAddresses(), addresses);
-        Assertions.assertEquals(node2.getKnownNodeAddresses(), addresses);
+        Assertions.assertEquals(node1.getNeighbors(), addresses);
+        Assertions.assertEquals(node2.getNeighbors(), addresses);
     }
 
     @Test

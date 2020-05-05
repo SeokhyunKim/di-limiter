@@ -94,7 +94,7 @@ public class OverlayNet {
             createdNodeAddresses.add(createHostedNode(nodeAddress, communicationType).getNodeAddress());
         }
         for (final Node node : hostedNodeMap.values()) {
-            node.getKnownNodeAddresses().addAll(createdNodeAddresses);
+            node.getNeighbors().addAll(createdNodeAddresses);
         }
         return new HashSet<>(hostedNodeMap.values());
     }
@@ -138,7 +138,7 @@ public class OverlayNet {
     public SortedSet<NodeAddress> getAllKnownNodes() {
         final SortedSet<NodeAddress> allNodes = new TreeSet<>();
         for (final Node node : hostedNodeMap.values()) {
-            allNodes.addAll(node.getKnownNodeAddresses());
+            allNodes.addAll(node.getNeighbors());
         }
         return allNodes;
     }

@@ -87,7 +87,7 @@ public class Dicounter {
     }
 
     public SortedSet<NodeAddress> getKnownNodeAddresses() {
-        return node.getKnownNodeAddresses();
+        return node.getNeighbors();
     }
 
     public UUID registerCountingTask(final long notificationThreshold, @NonNull final Consumer<CountingTask> notificationCallback) {
@@ -103,7 +103,7 @@ public class Dicounter {
             final LeaderAnnounceMessage message = LeaderAnnounceMessage.builder()
                                                                        .nodeAddress(node.getNodeAddress())
                                                                        .build();
-            for (final NodeAddress nodeAddress : node.getKnownNodeAddresses()) {
+            for (final NodeAddress nodeAddress : node.getNeighbors()) {
                 node.sendMessage(nodeAddress, Message.builder()
                                                      .type(MessageType.PAYLOAD_TRANSMISSION)
                                                      .payload(ObjectMappers.writeValueAsString(message))
@@ -121,7 +121,7 @@ public class Dicounter {
         // todo: this is a temporary approach to see PDT is working with an ideal unrealistic static nodes graph scenario.
         countingTask.setNumParticipatingNodes(overlayNet.getAllKnownNodes().size());
         countingTask.startCounting();
-        for (final NodeAddress nodeAddress : node.getKnownNodeAddresses()) {
+        for (final NodeAddress nodeAddress : node.getNeighbors()) {
             final StartRoundMessage startRoundMessage =
                 StartRoundMessage.builder()
                                  .countingTaskId(countingTaskId)
@@ -237,7 +237,7 @@ public class Dicounter {
                                             .build();
             final Message newMessage =
                     Messages.createPayloadTransmissionMessage(ObjectMappers.writeValueAsString(aggregateRequest));
-            for (final NodeAddress nodeAddress : node.getKnownNodeAddresses()) {
+            for (final NodeAddress nodeAddress : node.getNeighbors()) {
                 node.sendMessage(nodeAddress, newMessage);
             }
         }
