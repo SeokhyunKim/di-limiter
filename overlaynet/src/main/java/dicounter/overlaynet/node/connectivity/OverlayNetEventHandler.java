@@ -13,6 +13,12 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * {@link OverlayNetEvent} means an event happening on a overlay-network that can make any change in the node connection graph
+ * of the overlay network. {@link OverlayNetEventHandler} owns the logic to derive latest neighbor nodes from a set of overlay-network
+ * events. Also, this has logic to do simplification of overlay-network events set. For example, if there are two events that node A joined
+ * at t1 and left at t2 where t1 < t2, then the event for the participation of node A can be safely deleted.
+ */
 @Slf4j
 @AllArgsConstructor
 public class OverlayNetEventHandler {
